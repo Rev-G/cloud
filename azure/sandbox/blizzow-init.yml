@@ -1,0 +1,49 @@
+- name: Blizzow Init
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+
+    - name: Create Resource Group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: blizzow-beach
+        location: eastus
+        state: present
+        tags:
+          lifecycle: non-production
+          purpose: play
+          environment: sandbox
+
+    # - name: Create Storage Account
+    #   azure.azcollection.azure_rm_storageaccount:
+    #     resource_group: blizzow-beach
+    #     name: bluelagoon
+    #     state: present
+
+    - name: Create Storage Account
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: blizzow-beach
+        name: rainbowriver
+        type: Standard_LRS
+        kind: StorageV2
+        public_network_access: Disabled
+        allow_blob_public_access: true
+        state: present
+
+    - name: Create container for terraform state
+      azure.azcollection.azure_rm_storageblob:
+        resource_group: blizzow-beach
+        storage_account_name: rainbowriver
+        container: tfstate
+        state: present
+
+    - name: Get Storage Account
+      azure.azcollection.azure_rm_storageaccount_info:
+        resource_group: blizzow-beach
+        name: rainbowriver
+      register: sa_info
+
+    - name: Dump sa_info
+      ansible.builtin.debug:
+        msg: "{{ sa_info }}"
